@@ -4,13 +4,67 @@
 
 **Luồng 1: Về luồng vận hành & Tính năng chính** là bước quan trọng nhất vì nó quyết định trải nghiệm người dùng (UX) và kiến trúc dữ liệu của toàn hệ thống. Đây là nền tảng để xây dựng một marketplace hai chiều (two-sided marketplace) kết nối hiệu quả giữa cung (KOLs/Models) và cầu (Nhà tuyển dụng).
 
+**Tại sao Luồng 1 quan trọng nhất?**
+
+1. **Quyết định trải nghiệm người dùng (UX):**
+   - Nếu KOL thấy khó dùng → không tạo profile → không có supply
+   - Nếu Đối tác không tìm được người phù hợp → không trả tiền → không có revenue
+   - UX tốt = tăng conversion rate = tăng trưởng nhanh
+
+2. **Quyết định kiến trúc dữ liệu:**
+   - Thiết kế database sai từ đầu → khó scale sau này
+   - Cần nghĩ trước: Làm sao lưu trữ 100,000 profiles? 1 triệu ảnh?
+   - Cần tối ưu search: Tìm trong 10,000 profiles trong <500ms
+
+3. **Nền tảng cho các tính năng sau:**
+   - Luồng 2 (Monetization) dựa trên Luồng 1
+   - Luồng 3 (Admin) quản lý data từ Luồng 1
+   - Phần 4 (Agency) mở rộng từ Luồng 1
+
 ### **Nguyên tắc Thiết kế (Design Principles)**
 
-1. **Mobile-first cho KOLs:** 85% KOLs/Models sử dụng smartphone làm thiết bị chính
-2. **Desktop-optimized cho Đối tác:** Nhà tuyển dụng cần màn hình lớn để so sánh nhiều profiles
-3. **Simplicity over Features:** Ưu tiên trải nghiệm đơn giản, dễ dùng hơn là nhiều tính năng phức tạp
-4. **Trust & Safety First:** Xác thực danh tính và bảo vệ thông tin cá nhân là ưu tiên hàng đầu
-5. **Data-driven Matching:** Sử dụng dữ liệu và thuật toán để tối ưu hóa việc kết nối
+**1. Mobile-first cho KOLs:**
+- **Tại sao?** 85% KOLs/Models sử dụng smartphone làm thiết bị chính
+- **Nghĩa là gì?** 
+  - Thiết kế giao diện cho màn hình nhỏ trước
+  - Nút bấm to, dễ chạm
+  - Upload ảnh trực tiếp từ camera
+  - Không cần gõ nhiều (dùng dropdown, checkbox)
+- **Ví dụ:** Tinder, Instagram - mọi thứ làm được bằng 1 tay
+
+**2. Desktop-optimized cho Đối tác:**
+- **Tại sao?** Nhà tuyển dụng cần màn hình lớn để so sánh nhiều profiles
+- **Nghĩa là gì?**
+  - Hiển thị nhiều profiles cùng lúc (grid view)
+  - Bộ lọc phức tạp ở sidebar
+  - Bảng so sánh chi tiết
+  - Keyboard shortcuts cho power users
+- **Ví dụ:** LinkedIn Recruiter, Upwork - nhiều thông tin trên 1 màn hình
+
+**3. Simplicity over Features:**
+- **Tại sao?** Ưu tiên trải nghiệm đơn giản, dễ dùng hơn là nhiều tính năng phức tạp
+- **Nghĩa là gì?**
+  - 1 tính năng làm tốt > 10 tính năng làm tạm
+  - Mỗi màn hình chỉ 1 mục đích chính
+  - Ẩn các tính năng nâng cao (progressive disclosure)
+- **Ví dụ:** Google Search - 1 ô search, đơn giản nhưng mạnh mẽ
+
+**4. Trust & Safety First:**
+- **Tại sao?** Xác thực danh tính và bảo vệ thông tin cá nhân là ưu tiên hàng đầu
+- **Nghĩa là gì?**
+  - KYC (Know Your Customer) bắt buộc
+  - Xác minh số điện thoại, CMND/CCCD
+  - Không hiển thị số điện thoại công khai
+  - Escrow bảo vệ tiền
+- **Ví dụ:** Airbnb - verify ID, review system, secure payment
+
+**5. Data-driven Matching:**
+- **Tại sao?** Sử dụng dữ liệu và thuật toán để tối ưu hóa việc kết nối
+- **Nghĩa là gì?**
+  - Không để user tự tìm (quá nhiều lựa chọn = overwhelm)
+  - Hệ thống gợi ý dựa trên: lịch sử, preferences, behavior
+  - A/B test để tối ưu ranking algorithm
+- **Ví dụ:** Netflix recommendations, Spotify Discover Weekly
 
 ### **Kiến trúc Hệ thống (System Architecture)**
 
@@ -51,6 +105,91 @@
 │                                              └──────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
+
+**Giải thích từng tầng (Layer):**
+
+**1. Frontend Layer (Tầng Giao diện):**
+- **KOL Mobile App:** Ứng dụng di động cho KOL/Model
+  - Tại sao mobile? Vì KOL thường trẻ, quen dùng điện thoại
+  - Tính năng chính: Tạo profile, upload ảnh, nhận thông báo job
+  - Công nghệ: React Native (1 code chạy cả iOS và Android)
+  
+- **Partner Web Dashboard:** Trang web cho Nhà tuyển dụng
+  - Tại sao web? Vì cần màn hình lớn để xem nhiều profiles
+  - Tính năng chính: Tìm kiếm, lọc, so sánh, đăng job
+  - Công nghệ: React.js (nhanh, hiện đại)
+
+**2. API Gateway Layer (Tầng Cổng API):**
+- **Authentication & Authorization:** Kiểm tra đăng nhập và quyền truy cập
+  - Ví dụ: User A không được xem số điện thoại của User B
+  - Công nghệ: JWT tokens (mã hóa an toàn)
+  
+- **Rate Limiting:** Giới hạn số lượng request
+  - Tại sao? Tránh spam, DDoS attack
+  - Ví dụ: Mỗi IP chỉ được gọi API 100 lần/phút
+  
+- **Request Validation:** Kiểm tra dữ liệu đầu vào
+  - Ví dụ: Email phải đúng format, số điện thoại phải 10 số
+  - Tránh SQL injection, XSS attacks
+
+**3. Business Logic Layer (Tầng Xử lý Nghiệp vụ):**
+- **Profile Service:** Quản lý hồ sơ KOL
+  - CRUD operations: Create, Read, Update, Delete
+  - Xử lý upload ảnh, video
+  - Tính profile completion score
+  
+- **Search & Match Service:** Tìm kiếm và gợi ý
+  - Elasticsearch: Tìm kiếm full-text nhanh
+  - Ranking algorithm: Sắp xếp kết quả theo độ phù hợp
+  - AI matching: Gợi ý KOL phù hợp với job
+  
+- **Booking Service:** Quản lý đặt lịch
+  - Kiểm tra lịch rảnh
+  - Tạo booking, xác nhận, hủy
+  - Gửi thông báo nhắc nhở
+  
+- **Payment Service:** Xử lý thanh toán
+  - Tích hợp VNPay, Momo, Banking
+  - Escrow wallet (ví ký quỹ)
+  - Rút tiền về ngân hàng
+
+**4. Data Layer (Tầng Dữ liệu):**
+- **User DB (SQL):** Lưu thông tin user, profiles
+  - PostgreSQL: Database mạnh, hỗ trợ JSON
+  - Quan hệ phức tạp: User → Profile → Photos → Skills
+  
+- **Job DB (SQL):** Lưu thông tin jobs, bookings
+  - Quan hệ: Job → Applications → Bookings
+  
+- **Transaction DB (SQL):** Lưu lịch sử giao dịch
+  - Audit trail: Ai làm gì, khi nào
+  - Compliance: Báo cáo thuế, pháp lý
+  
+- **File Storage (S3/CDN):** Lưu ảnh, video
+  - AWS S3: Lưu trữ rẻ, không giới hạn
+  - CloudFront CDN: Phân phối nhanh toàn cầu
+  - Ví dụ: Ảnh ở TP.HCM load nhanh ở Hà Nội
+
+**Tại sao chia thành nhiều tầng?**
+
+1. **Separation of Concerns:** Mỗi tầng làm 1 việc riêng
+   - Frontend chỉ lo giao diện
+   - Backend chỉ lo logic
+   - Database chỉ lo lưu trữ
+   
+2. **Scalability:** Dễ mở rộng
+   - Traffic tăng? → Thêm server ở tầng Frontend
+   - Database chậm? → Thêm cache, replica
+   
+3. **Maintainability:** Dễ bảo trì
+   - Bug ở đâu? → Biết ngay tầng nào
+   - Cần sửa gì? → Chỉ sửa 1 tầng, không ảnh hưởng tầng khác
+   
+4. **Security:** Bảo mật tốt hơn
+   - Frontend không truy cập trực tiếp Database
+   - Mọi request đều qua API Gateway (kiểm tra)
+
+> **📌 Lưu ý:** Chi tiết kỹ thuật về Technology Stack, Database Schema, API Endpoints sẽ được tách sang tài liệu riêng tại `/docs/for-tech/plans/Core-Features-Technical-Specs.md`
 
 ---
 
